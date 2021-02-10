@@ -24,4 +24,3 @@ bin/
 *.iml
 /_build.bat
 /_maven-dependencies.bat
-/_run_test.bat
