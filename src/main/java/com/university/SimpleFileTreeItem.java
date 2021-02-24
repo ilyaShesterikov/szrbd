@@ -1,9 +1,16 @@
 package com.university;
 
 import java.io.File;
+import java.util.List;
+
+import com.dropbox.core.DbxException;
+import com.dropbox.core.v2.DbxClientV2;
+import com.dropbox.core.v2.files.*;
+import com.sun.corba.se.impl.orbutil.ObjectUtility;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
+import sun.awt.AWTAccessor;
 
 /**
  * @author Alexander Bolte - Bolte Consulting (2010 - 2014).
@@ -19,7 +26,10 @@ import javafx.scene.control.TreeItem;
  *         during runtime the whole tree would have to be rebuild. Event
  *         handling is not provided in this implementation.
  */
-public class SimpleFileTreeItem extends TreeItem<File> {
+public class SimpleFileTreeItem extends TreeItem<String> {
+    Metadata metadata;
+    DbxClientV2 client;
+
 
     /**
      * Calling the constructor of super class in oder to create a new
@@ -29,8 +39,10 @@ public class SimpleFileTreeItem extends TreeItem<File> {
      *            an object of type File from which a tree should be build or
      *            which children should be gotten.
      */
-    public SimpleFileTreeItem(File f) {
+    public SimpleFileTreeItem(String f, Metadata metadata, DbxClientV2 client) {
         super(f);
+        this.metadata = metadata;
+        this.client = client;
     }
 
     /*
@@ -39,7 +51,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
      * @see javafx.scene.control.TreeItem#getChildren()
      */
     @Override
-    public ObservableList<TreeItem<File>> getChildren() {
+    public ObservableList<TreeItem<String>> getChildren() {
         if (isFirstTimeChildren) {
             isFirstTimeChildren = false;
 
@@ -47,7 +59,11 @@ public class SimpleFileTreeItem extends TreeItem<File> {
              * First getChildren() call, so we actually go off and determine the
              * children of the File contained in this TreeItem.
              */
-            super.getChildren().setAll(buildChildren(this));
+            try {
+                super.getChildren().setAll(buildChildren(this));
+            } catch (DbxException e) {
+                e.printStackTrace();
+            }
         }
         return super.getChildren();
     }
@@ -61,8 +77,7 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     public boolean isLeaf() {
         if (isFirstTimeLeaf) {
             isFirstTimeLeaf = false;
-            File f = (File) getValue();
-            isLeaf = f.isFile();
+            isLeaf = this.getMetadata() instanceof FileMetadata;
         }
 
         return isLeaf;
@@ -79,20 +94,22 @@ public class SimpleFileTreeItem extends TreeItem<File> {
      *         represent all children available in handed TreeItem. If the
      *         handed TreeItem is a leaf, an empty list is returned.
      */
-    private ObservableList<TreeItem<File>> buildChildren(TreeItem<File> TreeItem) {
-        File f = TreeItem.getValue();
-        if (f != null && f.isDirectory()) {
-            File[] files = f.listFiles();
+    private ObservableList<SimpleFileTreeItem> buildChildren(TreeItem<String> TreeItem) throws DbxException {
+
+        if (this.metadata != null && this.metadata instanceof FolderMetadata) {
+//             if (treeItem.isRoot == null || !treeItem.isRoot) {
+            List<Metadata> files = this.client.files().listFolderBuilder(this.metadata.getPathLower()).start().getEntries();
             if (files != null) {
-                ObservableList<TreeItem<File>> children = FXCollections
+                ObservableList<SimpleFileTreeItem> children = FXCollections
                         .observableArrayList();
 
-                for (File childFile : files) {
-                    children.add(new SimpleFileTreeItem(childFile));
+                for (Metadata childFile : files) {
+                    children.add(new SimpleFileTreeItem(childFile.getName(), childFile, client));
                 }
 
                 return children;
             }
+//            } else {return treeItem.getChildren();}
         }
 
         return FXCollections.emptyObservableList();
@@ -101,4 +118,12 @@ public class SimpleFileTreeItem extends TreeItem<File> {
     private boolean isFirstTimeChildren = true;
     private boolean isFirstTimeLeaf = true;
     private boolean isLeaf;
+
+    public Metadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Metadata metadata) {
+        this.metadata = metadata;
+    }
 }
