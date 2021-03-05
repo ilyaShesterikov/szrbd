@@ -77,7 +77,7 @@ public class TreeViewSample extends Application {
         scene.setFill(Color.LIGHTGRAY);
 
         TreeView<String> treeView = new TreeView<String>(rootNode);
-        treeView.setEditable(true);
+//        treeView.setEditable(true);
         treeView.setCellFactory(new Callback<TreeView<String>,TreeCell<String>>(){
             @Override
             public TreeCell<String> call(TreeView<String> p) {

@@ -51,48 +51,6 @@ public class DropBox extends Application {
         log.setLevel(Level.INFO);
 
         return client;
-
-//        while (true) {
-//
-//            if (result != null) {
-//                for ( Metadata entry : result.getEntries()) {
-//                    TreeView<Metadata> fileView = new TreeView<Metadata>(
-//                            new SimpleFileTreeItem2(entry, client));
-////                    if (entry instanceof FileMetadata){
-////                        log.info("Added file: "+entry.getPathLower());
-////                    }
-//                }
-//
-//                if (!result.getHasMore()) {
-//                    log.info("GET LATEST CURSOR");
-//                    log.info(result.getCursor());
-//                }
-//
-//                try {
-//                    result = client.files().listFolderContinue(result.getCursor());
-//                } catch (DbxException e) {
-//                    log.info ("Couldn't get listFolderContinue");
-//                }
-//            }
-//        }
-
-//        while (true) {
-//            for (Metadata metadata : result.getEntries()) {
-//                System.out.println(metadata.getPathLower());
-//            }
-//
-//            if (!result.getHasMore()) {
-//                break;
-//            }
-//
-//            result = client.files().listFolderContinue(result.getCursor());
-//        }
-//
-//        // Upload "test.txt" to Dropboxf
-//        try (InputStream in = new FileInputStream("test.txt")) {
-//            FileMetadata metadata = client.files().uploadBuilder("/test.txt")
-//                    .uploadAndFinish(in);
-//        }
     }
 
     @Override
@@ -150,7 +108,7 @@ public class DropBox extends Application {
 //            buildTree(rootItem, client);
 
             TreeView<String> tree = new TreeView<String> (rootItem);
-
+            tree.setEditable(true);
 
             SplitPane splitView = new SplitPane();
             splitView.getItems().add(tree);
@@ -254,13 +212,26 @@ public class DropBox extends Application {
                 } catch (DbxException e) {
                     e.printStackTrace();
                 }
-                TreeItem c = (TreeItem)getTreeView().getSelectionModel().getSelectedItem();
+                TreeItem c = getTreeView().getSelectionModel().getSelectedItem();
                 boolean remove = c.getParent().getChildren().remove(c);
+            });
+
+            MenuItem rename = new MenuItem("Rename");
+            rename.setOnAction((EventHandler) t -> {
+                SimpleFileTreeItem newEmployee =
+                        null;
+                try {
+                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().moveV2(((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower(), ((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower().replace(((SimpleFileTreeItem)getTreeItem()).getMetadata().getName(), "") + newFolder.getText()).getMetadata(), client);
+                } catch (DbxException e) {
+                    e.printStackTrace();
+                }
+                getTreeItem().getChildren().add(newEmployee);
             });
 
             addMenu.getItems().add(createFolder);
             addMenu.getItems().add(uploadFile);
             addMenu.getItems().add(deleteFolder);
+            addMenu.getItems().add(rename);
 
         }
 
