@@ -103,11 +103,11 @@ public class DropBox extends Application {
             /* Creating a SplitPane and adding the fileView. */
 
             Metadata m = client.files().listFolder("").getEntries().get(0);
-            SimpleFileTreeItem rootItem = new SimpleFileTreeItem (m.getName(), m, client);
+            SimpleFileTreeItem rootItem = new SimpleFileTreeItem(m.getName(), m, client);
             rootItem.setExpanded(true);
 //            buildTree(rootItem, client);
 
-            TreeView<String> tree = new TreeView<String> (rootItem);
+            TreeView<String> tree = new TreeView<String>(rootItem);
             tree.setEditable(true);
 
             SplitPane splitView = new SplitPane();
@@ -115,7 +115,7 @@ public class DropBox extends Application {
             TextField newFolder = new TextField();
             newFolder.setText("foldername");
 
-            tree.setCellFactory(new Callback<TreeView<String>,TreeCell<String>>(){
+            tree.setCellFactory(new Callback<TreeView<String>, TreeCell<String>>() {
                 @Override
                 public TreeCell<String> call(TreeView<String> p) {
                     return new TextFieldTreeCellImpl(client, newFolder, primaryStage);
@@ -152,10 +152,10 @@ public class DropBox extends Application {
         }
     }
 
-    public void buildTree(SimpleFileTreeItem item, DbxClientV2 client)  {
+    public void buildTree(SimpleFileTreeItem item, DbxClientV2 client) {
         try {
             for (Metadata childM : client.files().listFolder(item.getMetadata().getPathLower()).getEntries()) {
-                SimpleFileTreeItem childMI= new SimpleFileTreeItem (childM.getName(), childM, client);
+                SimpleFileTreeItem childMI = new SimpleFileTreeItem(childM.getName(), childM, client);
                 item.getChildren().add(childMI);
                 buildTree(childMI, client);
             }
@@ -164,7 +164,7 @@ public class DropBox extends Application {
         }
     }
 
-        public static void main(String[] args) {
+    public static void main(String[] args) {
         launch(args);
     }
 
@@ -181,7 +181,7 @@ public class DropBox extends Application {
                 SimpleFileTreeItem newEmployee =
                         null;
                 try {
-                    newEmployee = new SimpleFileTreeItem(file.getName(), client.files().uploadBuilder(((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower() + "/" + file.getName()).withMode(WriteMode.OVERWRITE).uploadAndFinish(new FileInputStream(file)), client);
+                    newEmployee = new SimpleFileTreeItem(file.getName(), client.files().uploadBuilder(((SimpleFileTreeItem) getTreeItem()).getMetadata().getPathLower() + "/" + file.getName()).withMode(WriteMode.OVERWRITE).uploadAndFinish(new FileInputStream(file)), client);
                 } catch (DbxException e) {
                     e.printStackTrace();
                 } catch (IOException e) {
@@ -196,7 +196,7 @@ public class DropBox extends Application {
                 SimpleFileTreeItem newEmployee =
                         null;
                 try {
-                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().createFolderV2(((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower() + "/" + newFolder.getText()).getMetadata(), client);
+                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().createFolderV2(((SimpleFileTreeItem) getTreeItem()).getMetadata().getPathLower() + "/" + newFolder.getText()).getMetadata(), client);
                 } catch (DbxException e) {
                     e.printStackTrace();
                 }
@@ -208,12 +208,13 @@ public class DropBox extends Application {
                 SimpleFileTreeItem newEmployee =
                         null;
                 try {
-                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().deleteV2(((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower()).getMetadata(), client);
+                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().deleteV2(((SimpleFileTreeItem) getTreeItem()).getMetadata().getPathLower()).getMetadata(), client);
+                    TreeItem c = getTreeView().getSelectionModel().getSelectedItem();
+                    boolean remove = c.getParent().getChildren().remove(c);
                 } catch (DbxException e) {
                     e.printStackTrace();
                 }
-                TreeItem c = getTreeView().getSelectionModel().getSelectedItem();
-                boolean remove = c.getParent().getChildren().remove(c);
+
             });
 
             MenuItem rename = new MenuItem("Rename");
@@ -221,11 +222,12 @@ public class DropBox extends Application {
                 SimpleFileTreeItem newEmployee =
                         null;
                 try {
-                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().moveV2(((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower(), ((SimpleFileTreeItem)getTreeItem()).getMetadata().getPathLower().replace(((SimpleFileTreeItem)getTreeItem()).getMetadata().getName(), "") + newFolder.getText()).getMetadata(), client);
+                    newEmployee = new SimpleFileTreeItem(newFolder.getText(), client.files().moveV2(((SimpleFileTreeItem) getTreeItem()).getMetadata().getPathLower(), ((SimpleFileTreeItem) getTreeItem()).getMetadata().getPathLower().replace(((SimpleFileTreeItem) getTreeItem()).getMetadata().getName(), "") + newFolder.getText()).getMetadata(), client);
                 } catch (DbxException e) {
                     e.printStackTrace();
                 }
-                getTreeItem().getChildren().add(newEmployee);
+                getTreeItem().setValue(newEmployee.getValue());
+                ((SimpleFileTreeItem) getTreeItem()).setMetadata(newEmployee.getMetadata());
             });
 
             addMenu.getItems().add(createFolder);
@@ -273,8 +275,8 @@ public class DropBox extends Application {
                     setText(getString());
                     setGraphic(getTreeItem().getGraphic());
                     if (
-                            !getTreeItem().isLeaf()&&getTreeItem().getParent()!= null
-                    ){
+                            !getTreeItem().isLeaf() && getTreeItem().getParent() != null
+                    ) {
                         setContextMenu(addMenu);
                     }
                 }

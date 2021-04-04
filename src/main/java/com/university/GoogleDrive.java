@@ -258,14 +258,14 @@ public class GoogleDrive extends Application {
             rename.setOnAction((EventHandler) t -> {
                 SimpleFileTreeItem2 newEmployee =
                         null;
+                File file = null;
                 try {
-                    File file = client.files().update(((SimpleFileTreeItem2)getTreeItem()).getFile().getId(), new File().setName(newFolder.getText())).setFields("id, name, mimeType, parents").execute();
+                    file = client.files().update(((SimpleFileTreeItem2)getTreeItem()).getFile().getId(), new File().setName(newFolder.getText())).setFields("id, name, mimeType, parents").execute();
 
                     newEmployee = new SimpleFileTreeItem2(newFolder.getText(), file, client);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-                getTreeItem().getChildren().add(newEmployee);
             });
 
             addMenu.getItems().add(createFolder);
